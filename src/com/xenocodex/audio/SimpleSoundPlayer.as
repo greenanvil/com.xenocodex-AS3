@@ -45,11 +45,14 @@ package com.xenocodex.audio{
 		protected static var EVT_DISP:EventDispatcher;
 		
 		private var _playlist:SimplePlaylist;
+		private var _lastRequestedID:String;
 		private var _lastPlayedID:String;
 		private var _currentlyPlayingID:String;
 		
 		private var _sound:Sound;
 		private var _soundChannel:SoundChannel = new SoundChannel();
+		
+		private var _currSoundObj:SoundObj;
 		
 		private var _playing:Boolean = false;
 		
@@ -75,33 +78,40 @@ package com.xenocodex.audio{
 		 * @param playVol			The volume that the sound should be played at
 		 * 
 		 */		
-		public function playSound( soundID:String = null, playVol:Number = -1 ):void{
+		public function playSound( soundID:String = null, playVol:Number = -1, tstamp:Number = 0 ):void{
 			
 			// dont do anything if there is no playlist
 			if( !_playlist ) return;
 			
 			// if something is playing, stop it
-			if( _playing ) this.stop();
+			if( _playing ){
+				this.stop();
+			}
 			
 			// get the first registered sound if none is passed in by calling next
 			if( !soundID ) soundID = _playlist.getFirstSound().id;
 			
-			var theSound:SoundObj = _playlist.getSoundById( soundID );
+			_currSoundObj = _playlist.getSoundById( soundID );
 			
-			if( theSound.id != _currentlyPlayingID ){
+			if( _currSoundObj.id != _currentlyPlayingID ){
+				
+				_lastRequestedID = soundID;
 				
 				_sound = new Sound();
-				_sound.load( new URLRequest( theSound.uri ));
+				_sound.load( new URLRequest( _currSoundObj.uri ));
 				
-				_currentlyPlayingID = theSound.id;
+				_currentlyPlayingID = _currSoundObj.id;
 				
 			}
-				
-			_soundChannel = _sound.play();
+			
+			_lastPlayedID = soundID;
+			
+			_soundChannel = _sound.play( tstamp );
+			_soundChannel.addEventListener( Event.SOUND_COMPLETE, _handleSoundEvent );
 			
 			_playing = true;
 			
-			SimpleSoundPlayer.dispatchEvent( new SimpleSoundEvent( SimpleSoundEvent.PLAYING, theSound ));
+			SimpleSoundPlayer.dispatchEvent( new SimpleSoundEvent( SimpleSoundEvent.PLAYING, _currSoundObj ));
 			
 		}
 		
@@ -113,6 +123,8 @@ package com.xenocodex.audio{
 			
 			_soundChannel.stop();
 			_playing = false;
+			
+			SimpleSoundPlayer.dispatchEvent( new SimpleSoundEvent( SimpleSoundEvent.STOPPED, _currSoundObj ));
 			
 		}
 		
@@ -152,6 +164,52 @@ package com.xenocodex.audio{
 		public function get playlist():SimplePlaylist{
 			
 			return _playlist;
+			
+		}
+		
+		private function _handleSoundEvent( evt:Event ):void{
+			
+			switch( evt.type ){
+				
+				case Event.SOUND_COMPLETE:
+					
+					_playing = false;
+					
+					_soundChannel.removeEventListener( Event.SOUND_COMPLETE, _handleSoundEvent );
+					SimpleSoundPlayer.dispatchEvent( new SimpleSoundEvent( SimpleSoundEvent.STOPPED, _currSoundObj ));
+					break;
+				
+			}
+			
+		}
+		
+		public function get playing():Boolean{
+			
+			return _playing;
+			
+		}
+		
+		public function get currentlyPlayingID():String{
+			
+			return _currentlyPlayingID;
+			
+		}
+		
+		public function get timestamp():Number{
+			
+			return _soundChannel.position;
+			
+		}
+		
+		public function get lastRequestedID():String{
+			
+			return _lastRequestedID;
+			
+		}
+		
+		public function get lastPlayedID():String{
+			
+			return _lastPlayedID;
 			
 		}
 		

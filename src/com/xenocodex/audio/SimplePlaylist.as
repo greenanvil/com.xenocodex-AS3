@@ -88,10 +88,10 @@ package com.xenocodex.audio{
 		 * @param startVolume	The starting volume for the sound
 		 * 
 		 */
-		public function registerSound( soundID:String, uri:String, soundName:String = '', startVolume:Number = 50 ):void{
+		public function registerSound( soundID:String, uri:String, soundName:String = '', startVolume:Number = 50 ):SoundObj{
 		
 			// create the sound object and call registerSoundObj
-			this.registerSoundObj( new SoundObj( soundID, uri, soundName, startVolume ))
+			return this.registerSoundObj( new SoundObj( soundID, uri, soundName, startVolume ));
 		
 		}
 		
@@ -100,13 +100,15 @@ package com.xenocodex.audio{
 		 * @param soundObj		The SoundObj to be registered
 		 * 
 		 */		
-		public function registerSoundObj( soundObj:SoundObj ):void{
+		public function registerSoundObj( soundObj:SoundObj ):SoundObj{
 		
 			// register the sound with the dictionary
 			_soundDict[ soundObj.id ] = soundObj;
 			
 			// push the sound onto the stack
 			_soundList.push( soundObj );
+			
+			return _soundDict[ soundObj.id ];
 		
 		}
 		

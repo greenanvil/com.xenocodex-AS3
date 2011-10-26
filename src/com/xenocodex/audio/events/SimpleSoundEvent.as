@@ -37,6 +37,7 @@ package com.xenocodex.audio.events{
 	public class SimpleSoundEvent extends Event{
 		
 		public static var PLAYING:String = 'com.xenocodex.audio.events.SimpleSoundEvent.PLAYING';
+		public static var SOUND_COMPLETE:String = 'com.xenocodex.audio.events.SimpleSoundEvent.SOUND_COMPLETE';
 		public static var STOPPED:String = 'com.xenocodex.audio.events.SimpleSoundEvent.STOPPED';
 		
 		public var soundObj:SoundObj;
