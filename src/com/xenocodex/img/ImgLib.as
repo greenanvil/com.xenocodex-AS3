@@ -26,6 +26,7 @@
 package com.xenocodex.img{
 	
 	import com.xenocodex.img.events.ImgLibEvent;
+	import com.xenocodex.util.Dbug;
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -53,11 +54,12 @@ package com.xenocodex.img{
 		
 		private static var SELF_REF:ImgLib = null;
 		
-		public static var DBUG:Boolean  = false;
 		private static var EXPECT_NUM:int = 0;
 		
 		private static var IMG_STACK:Object = new Object();
 		private static var REG_LIST:Array = new Array();
+		
+		public static var REG_QUEUE:Array = new Array();
 		
 		protected static var EVT_DISP:EventDispatcher;
 		
@@ -81,6 +83,26 @@ package com.xenocodex.img{
 			ImgLib.EXPECT_NUM = ImgLib.EXPECT_NUM > 0 ? ImgLib.EXPECT_NUM + n : n;
 		}
 		
+		public static function queueImg( imgID:String, imgLoc:String, addExpectNum:Boolean = false ):void{
+			REG_QUEUE.push( { imgID:imgID, imgLoc:imgLoc, addExpectNum:addExpectNum } );
+		}
+		
+		public static function loadQueuedImages():void{
+			
+			Dbug.report('ImgLib > loadQueuedImages()', 2);
+			
+			var queueLen:int = REG_QUEUE.length;
+			
+			if( queueLen == 0 ) ImgLib.dispatchEvent( new ImgLibEvent( ImgLibEvent.ALL_IMGS_LOADED ));
+			
+			ImgLib.EXPECT_NUM = REG_QUEUE.length;
+			
+			while( --queueLen > -1 ){
+				ImgLib.loadImg( REG_QUEUE[ queueLen ].imgID, REG_QUEUE[ queueLen ].imgLoc, REG_QUEUE[ queueLen ].addExpectNum );
+			}
+			
+		}
+		
 		/**
 		 * Begins the loading of an image that the ImgLib references by the image ID value passed into imgID. An image ID is unique in 
 		 * the ImgLib.
@@ -89,6 +111,8 @@ package com.xenocodex.img{
 		 * 
 		 */		
 		public static function loadImg(imgID:String, imgLoc:String, addExpectNum:Boolean = false ):void{
+			
+			Dbug.report('ImgLib > loadImg() > ' + imgID + ', '  + imgLoc  + ', '  + addExpectNum, 2);
 			
 			// TODO: warn if image name is already in use
 			if (ImgLib.IMG_STACK[imgID]) {
@@ -109,7 +133,7 @@ package com.xenocodex.img{
 			
 			var completeHandler:Function = function(e:Event):void {
 				
-				if(DBUG) trace(this + ' completeHandler() > ID: ' + imgID ); 
+				Dbug.report(this + ' completeHandler() > ID: ' + imgID, 2 ); 
 				
 				var tmpBmpData:BitmapData = new BitmapData(tmpLoader.content.width, tmpLoader.content.height);
 				tmpBmpData.copyPixels(Bitmap(tmpLoader.content).bitmapData, new Rectangle(0, 0, tmpLoader.content.width, tmpLoader.content.height), new Point(0, 0));
@@ -132,10 +156,10 @@ package com.xenocodex.img{
 			}
 			
 			var httpStatusHandler:Function = function(e:HTTPStatusEvent):void {
-				if(DBUG) trace(this + ' httpStatusHandler() > ID: ' + imgID + ': httpStatusHandler: ' + e.status); 
+				Dbug.report(this + ' httpStatusHandler() > ID: ' + imgID + ': httpStatusHandler: ' + e.status, 2); 
 			}
 			var ioErrorHandler:Function = function(e:IOErrorEvent):void {
-				if(DBUG) trace(this + ' ioErrorHandler() > ID: ' + imgID + ': ioErrorHandler: ' + e); 
+				Dbug.report(this + ' ioErrorHandler() > ID: ' + imgID + ': ioErrorHandler: ' + e, 2); 
 			}
 			
 			tmpLoader.contentLoaderInfo.addEventListener( Event.COMPLETE, completeHandler );
@@ -267,7 +291,6 @@ package com.xenocodex.img{
 			if(EVT_DISP == null) return;
 			EVT_DISP.dispatchEvent.apply(null, p_args);
 			
-		}
-		
+		}		
 	}
 }
