@@ -35,21 +35,13 @@ package com.xenocodex.motion{
 			
 			var degrees:Number = degreesBase * dirMod;
 			
-//			trace( _targ + ': ' + degrees );
-			
 			_tween.duration = duration > 0 ? duration : minDuration;
-			
-//			trace( 'duration: ' + duration + ', degrees: ' + degrees );
 			
 			this.applyRotation( degrees );
 			
 		}
 		
 		public function applyRotation( deg:Number ):void{
-			
-//			var targetAngle:Number = _tween.proxy.rotation + deg;
-//			
-//			trace( this + ' > applyRotation( ' + deg + ' ) > current rotation: ' + _tween.proxy.rotation + ', target angle: ' + targetAngle );
 			
 			_tween.proxy.rotation += deg;
 			
